@@ -34,7 +34,7 @@ sub want_raise_errors { 1 }
 # if it it's made, or already exists.  die otherwise.
 sub create_db_if_not_exists {
     my ($pkg, $rdbh, $dbname) = @_;
-    if(not $rdbh->do("CREATE DATABASE $dbname")) {
+    if(not $rdbh->do(qq{CREATE DATABASE "$dbname"})) {
         die "Failed to create database '$dbname': " . $rdbh->errstr . "\n" if ($rdbh->errstr !~ /already exists/);
     }
 }
@@ -42,13 +42,13 @@ sub create_db_if_not_exists {
 sub grant_privileges {
     my ($pkg, $rdbh, $dbname, $user, $pass) = @_;
     eval {
-        $rdbh->do("CREATE ROLE $user LOGIN PASSWORD ?",
+        $rdbh->do(qq{CREATE ROLE "$user" LOGIN PASSWORD ?},
             undef, $pass);
     };
     die "Failed to create user '$user': ". $rdbh->errstr . "\n"
         if $rdbh->err && $rdbh->state != '42710';
     # Owning the database is postgres is important
-    $rdbh->do("ALTER DATABASE $dbname OWNER TO $user")
+    $rdbh->do(qq{ALTER DATABASE "$dbname" OWNER TO "$user"})
         or die "Failed to grant privileges " . $rdbh->errstr . "\n";
 }
 
